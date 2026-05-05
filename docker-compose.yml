@@ -1,0 +1,63 @@
+services:
+
+  # ── Frontend (React + Nginx) ───────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # En build time Vite embebe esta URL en el bundle.
+        # Como Nginx hace el proxy internamente, apunta a /api
+        # (relativo al mismo origen) o a la URL pública real.
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080}
+    container_name: store-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - store-net
+
+  # ── Backend (Spring Boot) ─────────────────────────
+  # Ajustá la imagen/build según tu proyecto backend.
+  backend:
+    image: ${BACKEND_IMAGE:-store-api:latest}
+    # Si tenés el Dockerfile del backend en ../backend:
+    # build:
+    #   context: ../backend
+    #   dockerfile: Dockerfile
+    container_name: store-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL:      ${DB_URL:-jdbc:mysql://db:3306/storedb}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-root}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASS:-secret}
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - store-net
+
+  # ── Base de datos (MySQL) ─────────────────────────
+  db:
+    image: mysql:8.0
+    container_name: store-db
+    environment:
+      MYSQL_DATABASE:      ${DB_NAME:-storedb}
+      MYSQL_ROOT_PASSWORD: ${DB_PASS:-secret}
+    volumes:
+      - db-data:/var/lib/mysql
+    ports:
+      - "3306:3306"       # exponer solo si necesitás acceso externo
+    restart: unless-stopped
+    networks:
+      - store-net
+
+networks:
+  store-net:
+    driver: bridge
+
+volumes:
+  db-data:
