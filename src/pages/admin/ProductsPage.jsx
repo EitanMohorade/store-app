@@ -11,15 +11,38 @@ import Modal from '@/components/shared/Modal'
 import ConfirmDialog from '@/components/shared/ConfirmDialog'
 
 const schema = z.object({
-  articulo:      z.string().min(1, 'Requerido'),
-  descripcion:   z.string().min(1, 'Requerido'),
-  stock:         z.coerce.number().min(0),
-  precio:        z.coerce.number().min(0),
-  precioUnitario:z.coerce.number().min(0),
-  imagenUrl:     z.string().url('URL inválida').or(z.literal('')).optional(),
-  categoriaId:   z.coerce.number().optional(),
-  companiaId:    z.coerce.number().optional(),
+  articulo:       z.string().min(1, 'Requerido'),
+  descripcion:    z.string().min(1, 'Requerido'),
+  stock:          z.coerce.number().min(0),
+  precio:         z.coerce.number().min(0),
+  precioUnitario: z.coerce.number().min(0),
+  imagenUrl:      z.string().url('URL inválida').or(z.literal('')).optional(),
+  categoriaId:    z.coerce.number().optional(),
+  companiaId:     z.coerce.number().optional(),
 })
+
+/* ── Precio field con prefijo $ ───────────────────── */
+function PriceInput({ label, registration, error }) {
+  return (
+    <div>
+      <label className="form-label">{label}</label>
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-400 pointer-events-none select-none">
+          $
+        </span>
+        <input
+          {...registration}
+          type="number"
+          min="0"
+          step="1"
+          className="form-input pl-7 font-semibold tabular-nums"
+          placeholder="0"
+        />
+      </div>
+      {error && <p className="text-xs text-red-500 mt-1">{error.message}</p>}
+    </div>
+  )
+}
 
 function ProductForm({ product, onClose }) {
   const { data: cats  = [] } = useCategories()
@@ -41,7 +64,9 @@ function ProductForm({ product, onClose }) {
     },
   })
 
-  const imgUrl = watch('imagenUrl')
+  const imgUrl  = watch('imagenUrl')
+  const precio  = watch('precio')
+  const pUnit   = watch('precioUnitario')
 
   async function onSubmit(values) {
     const payload = {
@@ -60,7 +85,9 @@ function ProductForm({ product, onClose }) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+
+      {/* Identificación */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="form-label">Artículo / Código</label>
@@ -72,22 +99,61 @@ function ProductForm({ product, onClose }) {
           <input {...register('descripcion')} className="form-input" placeholder="Leche entera 1L" />
           {errors.descripcion && <p className="text-xs text-red-500 mt-1">{errors.descripcion.message}</p>}
         </div>
+      </div>
+
+      {/* Precios — bloque destacado */}
+      <div className="rounded-xl border border-brand-100 bg-brand-50 p-4 space-y-3">
+        <p className="text-xs font-bold uppercase tracking-wider text-brand-600">
+          Precios (ARS)
+        </p>
+        <div className="grid grid-cols-2 gap-4">
+          <PriceInput
+            label="Precio de venta"
+            registration={register('precio')}
+            error={errors.precio}
+          />
+          <PriceInput
+            label="Precio unitario (lista)"
+            registration={register('precioUnitario')}
+            error={errors.precioUnitario}
+          />
+        </div>
+
+        {/* Preview de precios en tiempo real */}
+        {(Number(precio) > 0 || Number(pUnit) > 0) && (
+          <div className="flex gap-6 pt-1">
+            <div>
+              <p className="text-[10px] text-brand-500 uppercase tracking-wider font-bold mb-0.5">Venta</p>
+              <p className="font-serif text-xl text-gray-900">{formatCurrency(precio)}</p>
+            </div>
+            {Number(pUnit) > 0 && Number(pUnit) !== Number(precio) && (
+              <>
+                <div className="w-px bg-brand-200" />
+                <div>
+                  <p className="text-[10px] text-brand-500 uppercase tracking-wider font-bold mb-0.5">Lista</p>
+                  <p className="font-serif text-xl text-gray-500 line-through">{formatCurrency(pUnit)}</p>
+                </div>
+                <div className="w-px bg-brand-200" />
+                <div>
+                  <p className="text-[10px] text-green-600 uppercase tracking-wider font-bold mb-0.5">Descuento</p>
+                  <p className="font-serif text-xl text-green-600">
+                    {Number(pUnit) > 0
+                      ? `-${Math.round((1 - Number(precio) / Number(pUnit)) * 100)}%`
+                      : '—'}
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Stock + categoría + compañía */}
+      <div className="grid grid-cols-3 gap-4">
         <div>
           <label className="form-label">Stock</label>
           <input {...register('stock')} type="number" min="0" className="form-input" />
-        </div>
-        <div>
-          <label className="form-label">Precio</label>
-          <input {...register('precio')} type="number" min="0" step="0.01" className="form-input" />
-        </div>
-        <div>
-          <label className="form-label">Precio Unitario</label>
-          <input {...register('precioUnitario')} type="number" min="0" step="0.01" className="form-input" />
-        </div>
-        <div>
-          <label className="form-label">URL de imagen (opcional)</label>
-          <input {...register('imagenUrl')} className="form-input" placeholder="https://..." />
-          {errors.imagenUrl && <p className="text-xs text-red-500 mt-1">{errors.imagenUrl.message}</p>}
+          {errors.stock && <p className="text-xs text-red-500 mt-1">{errors.stock.message}</p>}
         </div>
         <div>
           <label className="form-label">Categoría</label>
@@ -105,18 +171,28 @@ function ProductForm({ product, onClose }) {
         </div>
       </div>
 
-      {/* Image preview */}
-      {imgUrl && (
-        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-          <img src={imgUrl} alt="preview"
-            onError={(e) => { e.target.style.display = 'none' }}
-            className="w-14 h-14 object-cover rounded-lg border border-gray-200" />
-          <p className="text-xs text-gray-500 truncate flex-1">{imgUrl}</p>
-        </div>
-      )}
+      {/* Imagen */}
+      <div>
+        <label className="form-label">URL de imagen (opcional)</label>
+        <input {...register('imagenUrl')} className="form-input" placeholder="https://..." />
+        {errors.imagenUrl && <p className="text-xs text-red-500 mt-1">{errors.imagenUrl.message}</p>}
+        {imgUrl && (
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl mt-2">
+            <img
+              src={imgUrl}
+              alt="preview"
+              onError={(e) => { e.target.style.display = 'none' }}
+              className="w-14 h-14 object-cover rounded-lg border border-gray-200"
+            />
+            <p className="text-xs text-gray-400 truncate flex-1">{imgUrl}</p>
+          </div>
+        )}
+      </div>
 
-      <div className="flex gap-3 pt-2">
-        <button type="button" onClick={onClose} className="btn-secondary flex-1 justify-center">Cancelar</button>
+      <div className="flex gap-3 pt-1">
+        <button type="button" onClick={onClose} className="btn-secondary flex-1 justify-center">
+          Cancelar
+        </button>
         <button type="submit" disabled={isSubmitting} className="btn-primary flex-[2] justify-center">
           {isSubmitting
             ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -131,10 +207,10 @@ export default function ProductsPage() {
   const { data: products = [], isLoading } = useProducts()
   const deleteProduct = useDeleteProduct()
 
-  const [search,      setSearch]      = useState('')
-  const [showForm,    setShowForm]    = useState(false)
-  const [editItem,    setEditItem]    = useState(null)
-  const [deleteItem,  setDeleteItem]  = useState(null)
+  const [search,     setSearch]     = useState('')
+  const [showForm,   setShowForm]   = useState(false)
+  const [editItem,   setEditItem]   = useState(null)
+  const [deleteItem, setDeleteItem] = useState(null)
 
   const filtered = products.filter((p) =>
     !search ||
@@ -147,7 +223,6 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="font-serif text-3xl text-gray-900">Productos</h1>
@@ -158,7 +233,6 @@ export default function ProductsPage() {
         </button>
       </div>
 
-      {/* Search */}
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
         <input
@@ -169,10 +243,9 @@ export default function ProductsPage() {
         />
       </div>
 
-      {/* Table */}
       {isLoading ? (
         <div className="space-y-2">
-          {Array.from({length: 5}).map((_,i) => (
+          {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-14 bg-gray-200 rounded-xl animate-pulse" />
           ))}
         </div>
@@ -218,7 +291,9 @@ export default function ProductsPage() {
                     <td className="table-td font-medium max-w-[200px] truncate">{p.descripcion}</td>
                     <td className="table-td text-gray-500 text-xs">{p.categoria?.nombre || '—'}</td>
                     <td className="table-td text-gray-500 text-xs">{p.compania?.nombre || '—'}</td>
-                    <td className="table-td font-semibold text-brand-600">{formatCurrency(p.precio)}</td>
+                    <td className="table-td">
+                      <span className="font-semibold text-brand-600">{formatCurrency(p.precio)}</span>
+                    </td>
                     <td className="table-td">
                       <span className={`badge text-[11px] ${stock.cls}`}>{stock.label}</span>
                     </td>
@@ -242,7 +317,6 @@ export default function ProductsPage() {
         </div>
       )}
 
-      {/* Modals */}
       <Modal
         open={showForm}
         onClose={() => setShowForm(false)}
