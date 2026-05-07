@@ -16,6 +16,7 @@ export function useProducts() {
 export function useCreateProduct() {
   const qc = useQueryClient()
   return useMutation({
+    // mutationFn recibe { payload, imageFile }
     mutationFn: productsApi.create,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: PRODUCTS_KEY })
@@ -28,7 +29,8 @@ export function useCreateProduct() {
 export function useUpdateProduct() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }) => productsApi.update(id, data),
+    // mutationFn recibe { id, payload, imageFile }
+    mutationFn: productsApi.update,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: PRODUCTS_KEY })
       toast.success('Producto actualizado.')
