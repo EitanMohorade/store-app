@@ -27,58 +27,22 @@ Frontend completo para la **Store API** (Spring Boot). Tienda pública accesible
 
 ## Estructura de carpetas
 
+He extraído la estructura completa del proyecto a un archivo independiente para facilitar su lectura y mantenimiento. Ver el árbol completo en [FOLDER_STRUCTURE.md](FOLDER_STRUCTURE.md).
+
+Resumen rápido:
+
 ```
-store-app/
-├── .vscode/
-│   ├── extensions.json       # Extensiones recomendadas para VS Code
-│   └── settings.json         # Tailwind IntelliSense + formato al guardar
-├── src/
-│   ├── api/                  # Una función por recurso, separadas por endpoint
-│   │   ├── axios.js          # Instancia base + interceptor de Authorization
-│   │   ├── products.js
-│   │   ├── categories.js
-│   │   ├── companies.js
-│   │   ├── sales.js
-│   │   └── admins.js
-│   ├── context/
-│   │   └── AuthContext.jsx   # Estado global de sesión (sessionStorage)
-│   ├── hooks/                # React Query hooks — un archivo por recurso
-│   │   ├── useProducts.js    # useProducts / useCreateProduct / ...
-│   │   ├── useCategories.js
-│   │   ├── useCompanies.js
-│   │   └── useSales.js       # useSales / useSalesToday / useSalesWeek / ...
-│   ├── pages/
-│   │   ├── store/
-│   │   │   ├── StorePage.jsx     # Catálogo público con filtros
-│   │   │   └── ProductCard.jsx   # Tarjeta de producto
-│   │   └── admin/
-│   │       ├── AdminLayout.jsx   # Sidebar + guard de autenticación
-│   │       ├── DashboardPage.jsx # Stats + gráfico de barras + últimas ventas
-│   │       ├── ProductsPage.jsx  # CRUD completo con tabla e imágenes
-│   │       ├── CategoriesPage.jsx
-│   │       ├── CompaniesPage.jsx
-│   │       ├── SalesPage.jsx     # Registrar ventas + filtros temporales
-│   │       └── SettingsPage.jsx  # Config de tienda + crear admin
-│   ├── components/shared/
-│   │   ├── Modal.jsx             # Modal genérico reutilizable
-│   │   ├── ConfirmDialog.jsx     # Diálogo de confirmación de acciones
-│   │   └── LoginModal.jsx        # Login con validación zod
-│   ├── router/
-│   │   └── index.jsx             # createBrowserRouter — rutas declarativas
-│   ├── lib/
-│   │   └── utils.js              # cn(), formatCurrency(), formatDate(), etc.
-│   ├── index.css                 # Tailwind @layer + clases componente (.btn-primary, etc.)
-│   └── main.jsx                  # QueryClient + AuthProvider + RouterProvider + Toaster
-├── .env.example                  # Template de variables de entorno
-├── .gitignore
-├── .prettierrc
-├── eslint.config.js
-├── tailwind.config.js
-├── postcss.config.js
-├── vite.config.js                # Alias @/ + proxy /api → backend
-└── package.json
+src/                # Código fuente (componentes, páginas, API, hooks, context)
+  api/              # Lógica de llamadas al backend (axios + endpoints)
+  hooks/            # Hooks de React Query por recurso
+  pages/            # Vistas públicas y panel admin
+  components/       # Componentes compartidos
+  context/          # Proveedores/global state
+  router/           # Definición de rutas
+  lib/              # Utilidades reutilizables
 ```
 
+Para instrucciones de instalación, scripts y despliegue, sigue leyendo abajo.
 ---
 
 ## Instalación

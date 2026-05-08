@@ -217,7 +217,7 @@ function ProductForm({ product, onClose }) {
         </div>
         <div>
           <label className="form-label">Descripción</label>
-          <input {...register('descripcion')} className="form-input" placeholder="Leche entera 1L" />
+          <input {...register('descripcion')} className="form-input" placeholder="bolso de cuero re lindo" />
           {errors.descripcion && <p className="text-xs text-red-500 mt-1">{errors.descripcion.message}</p>}
         </div>
       </div>

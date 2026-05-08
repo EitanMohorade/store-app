@@ -34,12 +34,12 @@ function CategoryForm({ category, onClose }) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <label className="form-label">Nombre</label>
-        <input {...register('nombre')} className="form-input" placeholder="Lácteos" autoFocus />
+        <input {...register('nombre')} className="form-input" placeholder="Bolsos" autoFocus />
         {errors.nombre && <p className="text-xs text-red-500 mt-1">{errors.nombre.message}</p>}
       </div>
       <div>
         <label className="form-label">Descripción (opcional)</label>
-        <input {...register('descripcion')} className="form-input" placeholder="Productos lácteos y derivados" />
+        <input {...register('descripcion')} className="form-input" placeholder="Productos Bolsos y derivados" />
       </div>
       <div className="flex gap-3 pt-1">
         <button type="button" onClick={onClose} className="btn-secondary flex-1 justify-center">Cancelar</button>

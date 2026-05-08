@@ -1,12 +1,15 @@
 import { ShoppingBag } from 'lucide-react'
 import { formatCurrency, stockBadge } from '@/lib/utils'
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, onClick }) {
   const stock = stockBadge(product.stock)
 
   return (
-    <article className="group bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm
-                        hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+    <article
+      onClick={() => onClick?.(product)}
+      className="group bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm
+                 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+    >
       {/* Image */}
       <div className="relative h-44 bg-brand-50 overflow-hidden">
         {product.imagenUrl ? (
@@ -21,7 +24,6 @@ export default function ProductCard({ product }) {
           </div>
         )}
 
-        {/* Badges */}
         <div className="absolute top-2.5 left-2.5 flex gap-1.5 flex-wrap">
           {product.categoria && (
             <span className="badge bg-gray-900/75 text-white text-[10px]">
@@ -33,6 +35,15 @@ export default function ProductCard({ product }) {
         <div className="absolute top-2.5 right-2.5">
           <span className={`badge text-[10px] ${stock.cls}`}>{stock.label}</span>
         </div>
+
+        {/* Overlay hint */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300
+                        flex items-center justify-center">
+          <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                           bg-white/90 text-gray-800 text-xs font-semibold px-3 py-1.5 rounded-full shadow">
+            Ver detalle
+          </span>
+        </div>
       </div>
 
       {/* Info */}
@@ -43,7 +54,6 @@ export default function ProductCard({ product }) {
         <h3 className="font-medium text-gray-900 text-sm leading-snug mb-3 line-clamp-2">
           {product.descripcion}
         </h3>
-
         <div className="flex items-end justify-between">
           <div>
             <p className="font-serif text-xl text-brand-600 font-semibold leading-none">

@@ -2,28 +2,27 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import {
   LayoutDashboard, Package, Tag, Building2, TrendingUp,
-  Settings, LogOut, ShoppingBag, ArrowLeft, Menu, X,
+  Settings, LogOut, ShoppingBag, ArrowLeft, Menu,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
+import { useConfig } from '@/hooks/useConfig'
 import LoginModal from '@/components/shared/LoginModal'
-import { storeSettings } from '@/lib/utils'
 
 const NAV = [
-  { to: 'dashboard',     label: 'Dashboard',      Icon: LayoutDashboard },
-  { to: 'productos',     label: 'Productos',       Icon: Package },
-  { to: 'categorias',    label: 'Categorías',      Icon: Tag },
-  { to: 'companias',     label: 'Compañías',       Icon: Building2 },
-  { to: 'ventas',        label: 'Ventas',          Icon: TrendingUp },
-  { to: 'configuracion', label: 'Configuración',   Icon: Settings },
+  { to: 'dashboard',     label: 'Dashboard',    Icon: LayoutDashboard },
+  { to: 'productos',     label: 'Productos',     Icon: Package },
+  { to: 'categorias',    label: 'Categorías',    Icon: Tag },
+  { to: 'companias',     label: 'Compañías',     Icon: Building2 },
+  { to: 'ventas',        label: 'Ventas',        Icon: TrendingUp },
+  { to: 'configuracion', label: 'Configuración', Icon: Settings },
 ]
 
 export default function AdminLayout() {
   const { isAdmin, logout } = useAuth()
   const navigate = useNavigate()
-  const [showLogin, setShowLogin] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-
-  const settings = storeSettings.get()
+  const { data: config = {} } = useConfig()
+  const [showLogin,    setShowLogin]    = useState(false)
+  const [sidebarOpen,  setSidebarOpen]  = useState(false)
 
   useEffect(() => {
     if (!isAdmin) setShowLogin(true)
@@ -60,7 +59,7 @@ export default function AdminLayout() {
             </div>
             <div>
               <p className="text-white font-semibold text-sm leading-none">
-                {settings.nombre || 'Mi Tienda'}
+                {config.nombre || 'Mi Tienda'}
               </p>
               <p className="text-gray-500 text-[11px] mt-0.5">Panel de Administración</p>
             </div>
@@ -86,10 +85,7 @@ export default function AdminLayout() {
 
         {/* Footer */}
         <div className="px-3 py-4 border-t border-white/10 space-y-1">
-          <button
-            onClick={() => navigate('/')}
-            className="admin-sidebar-link w-full"
-          >
+          <button onClick={() => navigate('/')} className="admin-sidebar-link w-full">
             <ArrowLeft className="w-4 h-4" /> Ver tienda
           </button>
           <button
@@ -101,14 +97,16 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {/* ── Main content ── */}
+      {/* ── Main ── */}
       <div className="flex-1 lg:pl-60 min-h-screen flex flex-col">
         {/* Mobile topbar */}
         <div className="lg:hidden bg-gray-900 px-4 h-14 flex items-center gap-3 sticky top-0 z-20">
           <button onClick={() => setSidebarOpen(true)} className="text-gray-400 hover:text-white">
             <Menu className="w-5 h-5" />
           </button>
-          <span className="font-serif text-white text-base">{settings.nombre || 'Admin'}</span>
+          <span className="font-serif text-white text-base">
+            {config.nombre || 'Admin'}
+          </span>
         </div>
 
         <main className="flex-1 p-6 sm:p-8">

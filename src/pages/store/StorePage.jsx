@@ -4,21 +4,22 @@ import { ShoppingBag, Search, LayoutDashboard, MapPin, LogIn } from 'lucide-reac
 import { useProducts } from '@/hooks/useProducts'
 import { useCategories } from '@/hooks/useCategories'
 import { useAuth } from '@/context/AuthContext'
-import { storeSettings, formatCurrency, stockBadge } from '@/lib/utils'
+import { useConfig } from '@/hooks/useConfig'
 import LoginModal from '@/components/shared/LoginModal'
 import ProductCard from './ProductCard'
+import ProductModal from './ProductModal'
 
 export default function StorePage() {
   const navigate = useNavigate()
   const { isAdmin } = useAuth()
-  const { data: products = [], isLoading } = useProducts()
-  const { data: categories = [] } = useCategories()
+  const { data: products   = [], isLoading } = useProducts()
+  const { data: categories = [] }            = useCategories()
+  const { data: config     = {} }            = useConfig()
 
-  const [search, setSearch]       = useState('')
-  const [catFilter, setCatFilter] = useState(null)
-  const [showLogin, setShowLogin] = useState(false)
-
-  const settings = storeSettings.get()
+  const [search,          setSearch]          = useState('')
+  const [catFilter,       setCatFilter]       = useState(null)
+  const [showLogin,       setShowLogin]       = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState(null)
 
   const filtered = products.filter((p) => {
     const matchCat  = !catFilter || p.categoria?.id === catFilter
@@ -38,11 +39,11 @@ export default function StorePage() {
               <ShoppingBag className="w-4 h-4 text-white" />
             </div>
             <span className="font-serif text-xl text-white">
-              {settings.nombre || 'Mi Tienda'}
+              {config.nombre || 'Mi Tienda'}
             </span>
-            {settings.direccion && (
+            {config.direccion && (
               <span className="hidden sm:flex items-center gap-1 text-xs text-gray-400 ml-2">
-                <MapPin className="w-3 h-3" /> {settings.direccion}
+                <MapPin className="w-3 h-3" /> {config.direccion}
               </span>
             )}
           </div>
@@ -52,8 +53,10 @@ export default function StorePage() {
               <LayoutDashboard className="w-4 h-4" /> Panel Admin
             </button>
           ) : (
-            <button onClick={() => setShowLogin(true)}
-              className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
+            <button
+              onClick={() => setShowLogin(true)}
+              className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
+            >
               <LogIn className="w-4 h-4" /> Admin
             </button>
           )}
@@ -63,22 +66,23 @@ export default function StorePage() {
       {/* ── Hero ── */}
       <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-16 px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <p className="text-brand-400 text-xs uppercase tracking-widest font-semibold mb-3">
-            {settings.direccion || 'Bienvenido'}
-          </p>
+          {config.direccion && (
+            <p className="text-brand-400 text-xs uppercase tracking-widest font-semibold mb-3">
+              {config.direccion}
+            </p>
+          )}
           <h1 className="font-serif text-4xl sm:text-5xl text-white leading-tight mb-4">
-            {settings.tagline || 'Productos frescos,\nprecios justos'}
+            {config.tagline || 'Bienvenidos a nuestra tienda'}
           </h1>
           <p className="text-gray-400 text-base leading-relaxed max-w-xl mx-auto">
-            {settings.descripcion || 'Explorá nuestra selección de productos de primera calidad.'}
+            {config.descripcion || 'Explorá nuestra selección de productos de primera calidad.'}
           </p>
         </div>
       </section>
 
-      {/* ── Filters ── */}
+      {/* ── Filtros ── */}
       <div className="bg-white border-b border-gray-200 sticky top-16 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center gap-3">
-          {/* Search */}
           <div className="relative flex-1 min-w-[200px] max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             <input
@@ -88,8 +92,6 @@ export default function StorePage() {
               className="form-input pl-9"
             />
           </div>
-
-          {/* Category pills */}
           <div className="flex flex-wrap gap-2">
             {[{ id: null, nombre: 'Todos' }, ...categories].map((cat) => (
               <button
@@ -107,7 +109,7 @@ export default function StorePage() {
         </div>
       </div>
 
-      {/* ── Products grid ── */}
+      {/* ── Grilla ── */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         {isLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
@@ -127,7 +129,13 @@ export default function StorePage() {
               {filtered.length} producto{filtered.length !== 1 ? 's' : ''} encontrado{filtered.length !== 1 ? 's' : ''}
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
-              {filtered.map((p) => <ProductCard key={p.id} product={p} />)}
+              {filtered.map((p) => (
+                <ProductCard
+                  key={p.id}
+                  product={p}
+                  onClick={setSelectedProduct}
+                />
+              ))}
             </div>
           </>
         )}
@@ -135,10 +143,18 @@ export default function StorePage() {
 
       {/* ── Footer ── */}
       <footer className="bg-gray-900 text-gray-500 text-xs text-center py-6 mt-10">
-        {settings.nombre || 'Mi Tienda'} · {settings.direccion || ''}
+        {config.nombre || 'Mi Tienda'}{config.direccion ? ` · ${config.direccion}` : ''}
       </footer>
 
+      {/* ── Modales ── */}
       <LoginModal open={showLogin} onClose={() => setShowLogin(false)} />
+
+      <ProductModal
+        product={selectedProduct}
+        allProducts={products}
+        onClose={() => setSelectedProduct(null)}
+        onSelectProduct={setSelectedProduct}  // navegar entre relacionados
+      />
     </div>
   )
 }

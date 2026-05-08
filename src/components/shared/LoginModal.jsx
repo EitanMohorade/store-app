@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { LogIn, AlertCircle } from 'lucide-react'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { setCredentials } from '@/api/axios'
 import { adminsApi } from '@/api/admins'
@@ -14,8 +15,15 @@ const schema = z.object({
   password: z.string().min(1, 'Requerido'),
 })
 
-export default function LoginModal({ open, onClose }) {
+/**
+ * Props:
+ *  - open: boolean
+ *  - onClose: () => void
+ *  - redirectTo: string (default '/admin') — ruta a la que redirige tras login exitoso
+ */
+export default function LoginModal({ open, onClose, redirectTo = '/admin' }) {
   const { login } = useAuth()
+  const navigate  = useNavigate()
   const [serverError, setServerError] = useState('')
 
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm({
@@ -24,13 +32,13 @@ export default function LoginModal({ open, onClose }) {
 
   async function onSubmit(values) {
     setServerError('')
-    // Temporarily set credentials to test them
     setCredentials(values)
     try {
       await adminsApi.verify()
       login(values)
       reset()
       onClose()
+      navigate(redirectTo)           // ← redirige al panel tras login exitoso
     } catch (e) {
       setCredentials(null)
       setServerError(
@@ -51,7 +59,10 @@ export default function LoginModal({ open, onClose }) {
         </div>
         <div>
           <label className="form-label">Contraseña</label>
-          <input {...register('password')} type="password" className="form-input" placeholder="••••••••" />
+          <input
+            {...register('password')} type="password"
+            className="form-input" placeholder="••••••••"
+          />
           {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>}
         </div>
 
